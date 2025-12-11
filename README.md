@@ -76,6 +76,92 @@ npm run build
 npm start
 ```
 
+## 🐳 Docker Deployment
+
+### Quick Start with Docker Compose
+
+The easiest way to run the entire application stack:
+
+```bash
+# Copy and configure environment variables
+cp .env.docker .env
+
+# Build and start all services
+docker-compose up -d
+
+# Run migrations and seed data
+docker-compose run --rm migrate
+
+# View logs
+docker-compose logs -f api
+```
+
+### Services
+
+| Service | Description | Port |
+|---------|-------------|------|
+| `api` | PMS REST API | 3000 |
+| `postgres` | PostgreSQL Database | 5432 |
+| `migrate` | Database migrations (runs once) | - |
+
+### Docker Commands
+
+```bash
+# Start all services
+docker-compose up -d
+
+# Stop all services
+docker-compose down
+
+# Rebuild and start (after code changes)
+docker-compose up -d --build
+
+# View API logs
+docker-compose logs -f api
+
+# Access PostgreSQL
+docker-compose exec postgres psql -U pms_user -d pms_db
+
+# Run Prisma Studio (for database management)
+docker-compose exec api npx prisma studio
+
+# Stop and remove all data (including volumes)
+docker-compose down -v
+```
+
+### Building Docker Image Manually
+
+```bash
+# Build the image
+docker build -t pms-api:latest .
+
+# Run with external PostgreSQL
+docker run -d \
+  --name pms-api \
+  -p 3000:3000 \
+  -e DATABASE_URL="postgresql://user:password@host:5432/pms_db" \
+  -e JWT_SECRET="your-secret-key" \
+  pms-api:latest
+```
+
+### Production Deployment
+
+For production, update `.env` with secure values:
+
+```env
+# Generate strong secrets
+JWT_SECRET=$(openssl rand -base64 32)
+JWT_REFRESH_SECRET=$(openssl rand -base64 32)
+POSTGRES_PASSWORD=$(openssl rand -base64 24)
+```
+
+Recommended production settings:
+- Use external managed PostgreSQL (AWS RDS, Cloud SQL, etc.)
+- Set `NODE_ENV=production`
+- Increase `BCRYPT_ROUNDS=12` for better security
+- Configure proper `CORS_ORIGIN` for your domain
+- Use a reverse proxy (nginx, Traefik) with SSL
+
 ## 📚 API Documentation
 
 ### Base URL
