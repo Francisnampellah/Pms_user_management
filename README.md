@@ -2,6 +2,13 @@
 
 A comprehensive Property Management System API for managing multiple hotel properties, rooms, staff, and users with multi-tenant organization support and hierarchical access control.
 
+[![Node.js](https://img.shields.io/badge/Node.js-20+-green.svg)](https://nodejs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.3+-blue.svg)](https://www.typescriptlang.org/)
+[![Express](https://img.shields.io/badge/Express-4.18-lightgrey.svg)](https://expressjs.com/)
+[![Prisma](https://img.shields.io/badge/Prisma-5.7-2D3748.svg)](https://www.prisma.io/)
+[![Docker](https://img.shields.io/badge/Docker-Ready-2496ED.svg)](https://www.docker.com/)
+[![ELK Stack](https://img.shields.io/badge/ELK-8.11-005571.svg)](https://www.elastic.co/)
+
 ## 🚀 Features
 
 - **Multi-tenant Architecture**: Support for multiple organizations with their own properties
@@ -12,12 +19,20 @@ A comprehensive Property Management System API for managing multiple hotel prope
 - **Rate Limiting**: Protection against brute-force attacks
 - **Input Validation**: Comprehensive request validation with Zod
 - **Pagination & Filtering**: Efficient data retrieval with search capabilities
+- **ELK Stack Integration**: Centralized logging with Elasticsearch, Logstash, and Kibana
+- **Docker Ready**: Full containerization with Docker Compose
+- **VPS Deployment Scripts**: Automated deployment with health checks
 
 ## 📋 Prerequisites
 
-- Node.js 18+ 
-- PostgreSQL 14+
+### Local Development
+- Node.js 20+ 
+- PostgreSQL 15+
 - npm or yarn
+
+### Docker Deployment (Recommended)
+- Docker 24+
+- Docker Compose 2.20+
 
 ## 🛠️ Installation
 
@@ -293,6 +308,246 @@ ENABLE_ELK_LOGGING=false
 docker-compose up -d postgres api
 ```
 
+## 🚀 VPS Deployment Guide
+
+### Deployment Scripts Overview
+
+Five convenient scripts automate the entire deployment workflow:
+
+| Script | Purpose | Usage |
+|--------|---------|-------|
+| `start.sh` | Main deployment script | `./start.sh` |
+| `stop.sh` | Stop all services | `./stop.sh` or `./stop.sh --remove-data` |
+| `update.sh` | Update and restart API | `./update.sh --migrate` |
+| `logs.sh` | View service logs | `./logs.sh api -f` |
+| `status.sh` | Check service health | `./status.sh` |
+
+### Quick Start on VPS
+
+#### Step 1: Upload to VPS
+
+```bash
+# From your local machine
+scp -r /path/to/PMS user@your-vps-ip:/opt/
+
+# Or clone from GitHub
+git clone https://github.com/Francisnampellah/Pms_user_management.git /opt/PMS
+cd /opt/PMS
+git checkout kibanaConfigs
+```
+
+#### Step 2: Configure Environment
+
+```bash
+cd /opt/PMS
+
+# Create .env file
+cat > .env << 'EOF'
+# Application
+NODE_ENV=production
+PORT=3000
+API_URL=http://your-vps-ip:3000
+
+# Database
+POSTGRES_USER=pms_user
+POSTGRES_PASSWORD=$(openssl rand -base64 24)
+POSTGRES_DB=pms_db
+POSTGRES_HOST=postgres
+POSTGRES_PORT=5432
+DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
+
+# JWT
+JWT_SECRET=$(openssl rand -base64 32)
+JWT_EXPIRES_IN=604800
+JWT_REFRESH_SECRET=$(openssl rand -base64 32)
+JWT_REFRESH_EXPIRES_IN=2592000
+
+# Security
+BCRYPT_ROUNDS=12
+
+# Elasticsearch
+ELASTIC_PASSWORD=$(openssl rand -base64 24)
+ENABLE_ELK_LOGGING=true
+LOGSTASH_HOST=logstash
+LOGSTASH_PORT=5000
+
+# CORS
+CORS_ORIGIN=http://your-vps-ip:3000
+EOF
+```
+
+#### Step 3: Run Deployment Script
+
+```bash
+chmod +x start.sh
+./start.sh
+```
+
+The script will:
+- ✅ Detect OS (Ubuntu, Debian, CentOS, RHEL, Amazon Linux, macOS)
+- ✅ Install Docker and Docker Compose if needed
+- ✅ Install dependencies (git, curl, jq)
+- ✅ Build Docker images
+- ✅ Start PostgreSQL and verify connectivity
+- ✅ Start Elasticsearch, Logstash, Kibana
+- ✅ Start the API service
+- ✅ Run database migrations
+- ✅ Seed initial data
+- ✅ Verify all services are healthy
+
+#### Step 4: Verify Deployment
+
+```bash
+# Check service status
+./status.sh
+
+# Expected output shows all services healthy
+# API:           ✓ Healthy
+# PostgreSQL:    ✓ Healthy
+# Elasticsearch: ✓ Healthy (green)
+# Logstash:      ✓ Healthy
+# Kibana:        ✓ Healthy
+```
+
+### Post-Deployment Access
+
+| Service | URL | Credentials |
+|---------|-----|-------------|
+| PMS API | `http://your-vps-ip:3000` | Bearer JWT token |
+| Kibana | `http://your-vps-ip:5601` | elastic / *password from .env* |
+| PostgreSQL | `your-vps-ip:5432` | pms_user / *password from .env* |
+
+### Management Commands
+
+```bash
+# View logs (follow mode)
+./logs.sh api -f                 # Follow API logs
+./logs.sh logstash -f            # Follow Logstash logs
+./logs.sh all -f                 # Follow all logs
+./logs.sh postgres -n 50         # Show last 50 PostgreSQL logs
+
+# Update application
+./update.sh                       # Update and restart API
+./update.sh --migrate            # Update, migrate, restart
+./update.sh --pull               # Pull latest images, rebuild, restart
+
+# Stop services
+./stop.sh                         # Stop but keep data
+./stop.sh --remove-data          # Stop and delete all volumes
+
+# Health checks
+./status.sh                       # Full status report
+```
+
+### Troubleshooting
+
+```bash
+# Check if port 3000 is in use
+netstat -tuln | grep 3000
+
+# View detailed logs
+./logs.sh api -n 200 | tail -100
+
+# Verify Docker network
+docker network ls
+docker network inspect pms-network
+
+# Check database connection
+docker compose exec postgres psql -U pms_user -d pms_db -c "SELECT version();"
+
+# Check Elasticsearch
+curl -u elastic:changeme http://localhost:9200/_cluster/health?pretty
+
+# Restart a specific service
+docker compose restart api
+docker compose restart postgres
+```
+
+### SSL/TLS Setup (Recommended for Production)
+
+Use Nginx as a reverse proxy with Let's Encrypt:
+
+```bash
+# Install Certbot
+sudo apt-get install certbot python3-certbot-nginx
+
+# Generate certificate
+sudo certbot certonly --standalone -d your-domain.com
+
+# Create Nginx config at /etc/nginx/sites-available/pms
+```
+
+Example Nginx configuration:
+
+```nginx
+upstream pms {
+    server localhost:3000;
+}
+
+server {
+    listen 443 ssl http2;
+    listen [::]:443 ssl http2;
+    server_name your-domain.com;
+
+    ssl_certificate /etc/letsencrypt/live/your-domain.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/your-domain.com/privkey.pem;
+    
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers HIGH:!aNULL:!MD5;
+    ssl_prefer_server_ciphers on;
+
+    location / {
+        proxy_pass http://pms;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    location /kibana {
+        proxy_pass http://localhost:5601;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+}
+
+server {
+    listen 80;
+    listen [::]:80;
+    server_name your-domain.com;
+    return 301 https://$server_name$request_uri;
+}
+```
+
+### Backup Strategy
+
+```bash
+# Backup PostgreSQL
+docker compose exec postgres pg_dump -U pms_user pms_db > backup_$(date +%Y%m%d).sql
+
+# Backup Elasticsearch indices
+curl -u elastic:changeme -X GET "http://localhost:9200/_cat/indices" > indices_$(date +%Y%m%d).txt
+
+# Backup Docker volumes
+docker run --rm -v pms_postgres_data:/data -v $(pwd):/backup \
+  alpine tar czf /backup/postgres_backup_$(date +%Y%m%d).tar.gz -C / data
+```
+
+### Monitoring
+
+For production, monitor:
+- API response times via Kibana dashboards
+- Elasticsearch cluster health
+- PostgreSQL connections and queries
+- Docker resource usage (CPU, memory)
+- Disk space on /opt/PMS and data volumes
+
+Use `./status.sh` for quick health checks or set up automated monitoring with:
+- Prometheus + Grafana
+- DataDog
+- New Relic
+- Sentry for error tracking
+
 ## 📚 API Documentation
 
 ### Base URL
@@ -439,22 +694,50 @@ curl -X POST http://localhost:3000/api/v1/auth/login \
 ## 📁 Project Structure
 
 ```
-project-root/
+PMS/
 ├── prisma/
-│   ├── schema.prisma      # Database schema
-│   └── seed.ts            # Seed data script
+│   ├── schema.prisma          # Database schema (8 models)
+│   ├── seed.ts                # Seed data script
+│   └── migrations/            # Database migrations
 ├── src/
 │   ├── config/
-│   │   ├── database.ts    # Prisma client setup
-│   │   └── logger.ts      # Pino logger config
-│   ├── controllers/       # Route handlers
-│   ├── middlewares/       # Express middlewares
-│   ├── routes/            # API routes
-│   ├── services/          # Business logic
-│   ├── types/             # TypeScript types
-│   ├── utils/             # Utility functions
-│   └── app.ts             # Express app setup
-├── .env.example           # Environment template
+│   │   ├── database.ts        # Prisma client setup
+│   │   └── logger.ts          # Pino logger with ELK transport
+│   ├── controllers/           # Route handlers
+│   ├── middlewares/
+│   │   ├── auth.middleware.ts
+│   │   ├── elk-logging.middleware.ts
+│   │   ├── error.middleware.ts
+│   │   ├── rateLimiter.middleware.ts
+│   │   └── validation.middleware.ts
+│   ├── routes/                # API routes
+│   ├── services/              # Business logic
+│   ├── types/                 # TypeScript types
+│   ├── utils/                 # Utility functions
+│   ├── __tests__/             # Jest test files
+│   └── app.ts                 # Express app setup
+├── elk/
+│   ├── elasticsearch/
+│   │   └── elasticsearch.yml  # ES configuration
+│   ├── logstash/
+│   │   ├── Dockerfile         # Custom Logstash image
+│   │   ├── config/
+│   │   │   └── logstash.yml
+│   │   └── pipeline/
+│   │       └── logstash.conf  # Log parsing pipeline
+│   ├── kibana/
+│   │   └── kibana.yml         # Kibana configuration
+│   └── setup-elk.sh           # ELK setup script
+├── Dockerfile                 # Production API image
+├── Dockerfile.migrate         # Migration image
+├── docker-compose.yml         # Full stack orchestration
+├── start.sh                   # VPS deployment script
+├── stop.sh                    # Stop services script
+├── update.sh                  # Update and restart script
+├── logs.sh                    # Log viewer script
+├── status.sh                  # Health check script
+├── .env.example               # Environment template
+├── .env.docker                # Docker environment template
 ├── package.json
 ├── tsconfig.json
 └── README.md
