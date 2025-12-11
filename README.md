@@ -98,53 +98,61 @@ npm start
 The easiest way to run the entire application stack:
 
 ```bash
+# Clone the repository
+git clone https://github.com/Francisnampellah/Pms_user_management.git
+cd Pms_user_management
+git checkout kibanaConfigs
+
 # Copy and configure environment variables
 cp .env.docker .env
 
 # Build and start all services
-docker-compose up -d
+docker compose up -d
 
 # Run migrations and seed data
-docker-compose run --rm migrate
+docker compose run --rm migrate
 
 # View logs
-docker-compose logs -f api
+docker compose logs -f api
 ```
 
 ### Services
 
-| Service | Description | Port |
-|---------|-------------|------|
-| `api` | PMS REST API | 3000 |
-| `postgres` | PostgreSQL Database | 5432 |
-| `elasticsearch` | Log storage and search | 9200 |
-| `logstash` | Log processing pipeline | 5000, 5044 |
-| `kibana` | Log visualization | 5601 |
-| `migrate` | Database migrations (runs once) | - |
+| Service | Container | Description | Port |
+|---------|-----------|-------------|------|
+| `api` | pms-api | PMS REST API | 3000 |
+| `postgres` | pms-postgres | PostgreSQL 15 Database | 5432 |
+| `elasticsearch` | pms-elasticsearch | Log storage and search (v8.11) | 9200, 9300 |
+| `logstash` | pms-logstash | Log processing pipeline | 5001→5000, 5044, 9600 |
+| `kibana` | pms-kibana | Log visualization (v8.11) | 5601 |
+| `migrate` | pms-migrate | Database migrations (runs once) | - |
 
 ### Docker Commands
 
 ```bash
 # Start all services
-docker-compose up -d
+docker compose up -d
 
 # Stop all services
-docker-compose down
+docker compose down
 
 # Rebuild and start (after code changes)
-docker-compose up -d --build
+docker compose up -d --build
 
 # View API logs
-docker-compose logs -f api
+docker compose logs -f api
 
 # Access PostgreSQL
-docker-compose exec postgres psql -U pms_user -d pms_db
+docker compose exec postgres psql -U pms_user -d pms_db
 
 # Run Prisma Studio (for database management)
-docker-compose exec api npx prisma studio
+docker compose exec api npx prisma studio
 
 # Stop and remove all data (including volumes)
-docker-compose down -v
+docker compose down -v
+
+# Check service health
+docker compose ps
 ```
 
 ### Building Docker Image Manually
@@ -272,7 +280,7 @@ Each log entry contains:
 
 ```bash
 # Start only ELK services
-docker-compose up -d elasticsearch logstash kibana
+docker compose up -d elasticsearch logstash kibana
 
 # Check Elasticsearch health
 curl -u elastic:changeme http://localhost:9200/_cluster/health?pretty
@@ -283,8 +291,11 @@ curl http://localhost:9600/_node/stats/pipelines?pretty
 # View indices
 curl -u elastic:changeme http://localhost:9200/_cat/indices?v
 
-# Delete old logs (older than 7 days)
+# Delete old logs (older than 7 days) - Linux
 curl -X DELETE -u elastic:changeme "http://localhost:9200/pms-logs-$(date -d '7 days ago' +%Y.%m.%d)"
+
+# Delete old logs (older than 7 days) - macOS
+curl -X DELETE -u elastic:changeme "http://localhost:9200/pms-logs-$(date -v-7d +%Y.%m.%d)"
 ```
 
 ### Environment Variables
@@ -305,7 +316,7 @@ To run without ELK stack (e.g., for local development):
 ENABLE_ELK_LOGGING=false
 
 # Or start only core services
-docker-compose up -d postgres api
+docker compose up -d postgres api
 ```
 
 ## 🚀 VPS Deployment Guide
@@ -746,11 +757,8 @@ PMS/
 ## 🧪 Testing
 
 ```bash
-# Run tests
-npm test
-
 # Run tests with coverage
-npm run test:coverage
+npm test
 
 # Run tests in watch mode
 npm run test:watch
@@ -796,29 +804,51 @@ npm run test:watch
 
 ## 🛡️ Security Features
 
-- Password hashing with bcrypt (10+ rounds)
-- JWT tokens with configurable expiration
-- Rate limiting on all endpoints
-- Stricter rate limiting on auth endpoints
-- CORS configuration
+- Password hashing with bcrypt (10+ rounds, configurable)
+- JWT tokens with configurable expiration (default: 7 days)
+- Refresh tokens with 30-day expiration
+- Rate limiting on all endpoints (100 req/15min)
+- Stricter rate limiting on auth endpoints (5 req/15min)
+- CORS configuration (configurable origin)
 - Helmet security headers
-- Input sanitization
+- Input sanitization with Zod
 - SQL injection prevention via Prisma ORM
+- Non-root Docker containers
 
 ## 🔧 Available Scripts
 
 | Script | Description |
 |--------|-------------|
 | `npm run dev` | Start development server with hot reload |
-| `npm run build` | Build for production |
+| `npm run build` | Build TypeScript for production |
 | `npm start` | Start production server |
-| `npm test` | Run tests |
+| `npm test` | Run tests with coverage |
+| `npm run test:watch` | Run tests in watch mode |
 | `npm run lint` | Run ESLint |
 | `npm run format` | Format code with Prettier |
 | `npm run prisma:generate` | Generate Prisma client |
 | `npm run prisma:migrate` | Run database migrations |
 | `npm run prisma:seed` | Seed the database |
 | `npm run prisma:studio` | Open Prisma Studio |
+
+## 🐚 Deployment Scripts
+
+| Script | Description |
+|--------|-------------|
+| `./start.sh` | Full VPS deployment (installs Docker, builds, starts all) |
+| `./stop.sh` | Stop all services (use `--remove-data` to delete volumes) |
+| `./update.sh` | Update and restart API (use `--migrate` for migrations) |
+| `./logs.sh` | View service logs (e.g., `./logs.sh api -f`) |
+| `./status.sh` | Check health status of all services |
+
+## 🔗 Quick Links (After Deployment)
+
+| Resource | URL |
+|----------|-----|
+| API Health | http://localhost:3000/health |
+| API Base | http://localhost:3000/api/v1 |
+| Kibana | http://localhost:5601 |
+| Elasticsearch | http://localhost:9200 |
 
 ## 📄 License
 
@@ -831,4 +861,8 @@ ISC
 3. Commit your changes (`git commit -m 'Add some amazing feature'`)
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
-# Pms_user_management
+
+---
+
+**Repository:** [Francisnampellah/Pms_user_management](https://github.com/Francisnampellah/Pms_user_management)  
+**Branch:** `kibanaConfigs`
