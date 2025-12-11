@@ -1,0 +1,210 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Organization {
+  id          Int       @id @default(autoincrement())
+  name        String    @db.VarChar(255)
+  code        String?   @unique @db.VarChar(50)
+  description String?   @db.Text
+  isActive    Boolean   @default(true) @map("is_active")
+  timezone    String?   @db.VarChar(50)
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  // Relations
+  properties Property[]
+  staff      Staff[]
+
+  @@index([isActive], map: "idx_org_active")
+  @@index([code], map: "idx_org_code")
+  @@map("organization")
+}
+
+model Property {
+  id             Int       @id @default(autoincrement())
+  organizationId Int       @map("organization_id")
+  name           String    @db.VarChar(255)
+  code           String?   @unique @db.VarChar(50)
+  address        String    @db.VarChar(500)
+  city           String    @db.VarChar(100)
+  state          String?   @db.VarChar(100)
+  country        String    @db.VarChar(100)
+  postalCode     String?   @map("postal_code") @db.VarChar(20)
+  phone          String?   @db.VarChar(50)
+  email          String?   @db.VarChar(100)
+  capacity       Int       @default(0)
+  isActive       Boolean   @default(true) @map("is_active")
+  timezone       String?   @db.VarChar(50)
+  latitude       Decimal?  @db.Decimal(10, 8)
+  longitude      Decimal?  @db.Decimal(11, 8)
+  checkInTime    String?   @map("check_in_time") @db.VarChar(10)
+  checkOutTime   String?   @map("check_out_time") @db.VarChar(10)
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  // Relations
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  items        Item[]
+  staff        Staff[]
+
+  @@index([organizationId, isActive], map: "idx_prop_org_active")
+  @@index([code], map: "idx_prop_code")
+  @@index([city, country], map: "idx_prop_location")
+  @@map("property")
+}
+
+enum ItemStatus {
+  available
+  occupied
+  maintenance
+  reserved
+  cleaning
+  outOfService
+
+  @@map("item_status")
+}
+
+model Item {
+  id           Int         @id @default(autoincrement())
+  propertyId   Int         @map("property_id")
+  name         String      @db.VarChar(255)
+  code         String?     @unique @db.VarChar(50)
+  description  String?     @db.Text
+  status       ItemStatus  @default(available)
+  itemType     String?     @map("item_type") @db.VarChar(50)
+  floor        Int?
+  maxOccupancy Int?        @map("max_occupancy")
+  price        Decimal?    @db.Decimal(10, 2)
+  isActive     Boolean     @default(true) @map("is_active")
+  createdAt    DateTime    @default(now()) @map("created_at")
+  updatedAt    DateTime    @updatedAt @map("updated_at")
+
+  // Relations
+  property Property @relation(fields: [propertyId], references: [id], onDelete: Restrict)
+
+  @@index([propertyId, status, isActive], map: "idx_item_prop_status")
+  @@index([code], map: "idx_item_code")
+  @@index([status], map: "idx_item_status")
+  @@index([itemType], map: "idx_item_type")
+  @@map("item")
+}
+
+model User {
+  id                   Int        @id @default(autoincrement())
+  email                String     @unique @db.VarChar(255)
+  password             String     @db.VarChar(255)
+  firstName            String     @map("first_name") @db.VarChar(100)
+  lastName             String     @map("last_name") @db.VarChar(100)
+  phone                String?    @db.VarChar(50)
+  isActive             Boolean    @default(true) @map("is_active")
+  isEmailVerified      Boolean    @default(false) @map("is_email_verified")
+  lastLoginAt          DateTime?  @map("last_login_at")
+  passwordResetToken   String?    @map("password_reset_token") @db.VarChar(255)
+  passwordResetExpiry  DateTime?  @map("password_reset_expiry")
+  createdAt            DateTime   @default(now()) @map("created_at")
+  updatedAt            DateTime   @updatedAt @map("updated_at")
+
+  // Relations
+  staff      Staff[]
+  auditLogs  AuditLog[]
+
+  @@index([email], map: "idx_user_email")
+  @@index([isActive], map: "idx_user_active")
+  @@index([lastLoginAt], map: "idx_user_last_login")
+  @@map("user")
+}
+
+enum RoleScope {
+  system
+  organization
+  property
+
+  @@map("role_scope")
+}
+
+model Role {
+  id          Int         @id @default(autoincrement())
+  name        String      @unique @db.VarChar(50)
+  scope       RoleScope
+  description String?     @db.Text
+  permissions String[]    @default([])
+  isActive    Boolean     @default(true) @map("is_active")
+  createdAt   DateTime    @default(now()) @map("created_at")
+  updatedAt   DateTime    @updatedAt @map("updated_at")
+
+  // Relations
+  staff Staff[]
+
+  @@index([scope, isActive], map: "idx_role_scope_active")
+  @@map("role")
+}
+
+model Staff {
+  id             Int       @id @default(autoincrement())
+  userId         Int       @map("user_id")
+  organizationId Int       @map("organization_id")
+  propertyId     Int?      @map("property_id")
+  roleId         Int       @map("role_id")
+  isActive       Boolean   @default(true) @map("is_active")
+  startDate      DateTime? @map("start_date") @db.Date
+  endDate        DateTime? @map("end_date") @db.Date
+  employeeId     String?   @map("employee_id") @db.VarChar(50)
+  department     String?   @db.VarChar(100)
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  // Relations
+  user         User         @relation(fields: [userId], references: [id], onDelete: Restrict)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  property     Property?    @relation(fields: [propertyId], references: [id], onDelete: Restrict)
+  role         Role         @relation(fields: [roleId], references: [id], onDelete: Restrict)
+
+  @@unique([userId, organizationId, propertyId], map: "unique_staff_assignment")
+  @@index([organizationId, isActive], map: "idx_staff_org_active")
+  @@index([propertyId, isActive], map: "idx_staff_prop_active")
+  @@index([userId], map: "idx_staff_user")
+  @@index([roleId], map: "idx_staff_role")
+  @@map("staff")
+}
+
+model AuditLog {
+  id         Int       @id @default(autoincrement())
+  userId     Int?      @map("user_id")
+  action     String    @db.VarChar(100)
+  entityType String    @map("entity_type") @db.VarChar(50)
+  entityId   Int?      @map("entity_id")
+  changes    Json?
+  ipAddress  String?   @map("ip_address") @db.VarChar(50)
+  userAgent  String?   @map("user_agent") @db.VarChar(500)
+  createdAt  DateTime  @default(now()) @map("created_at")
+
+  // Relations
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt], map: "idx_audit_user_time")
+  @@index([entityType, entityId], map: "idx_audit_entity")
+  @@index([action, createdAt], map: "idx_audit_action_time")
+  @@map("audit_log")
+}
+
+model SystemSetting {
+  id          Int      @id @default(autoincrement())
+  key         String   @unique @db.VarChar(100)
+  value       String   @db.Text
+  description String?  @db.Text
+  isPublic    Boolean  @default(false) @map("is_public")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@index([key], map: "idx_setting_key")
+  @@map("system_setting")
+}
