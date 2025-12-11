@@ -1,0 +1,20 @@
+# Elasticsearch Configuration
+
+cluster.name: "pms-cluster"
+network.host: 0.0.0.0
+
+# Security settings
+xpack.security.enabled: true
+xpack.security.enrollment.enabled: false
+
+# Discovery settings (single node)
+discovery.type: single-node
+
+# Memory settings
+bootstrap.memory_lock: true
+
+# Disable machine learning (reduces memory)
+xpack.ml.enabled: false
+
+# Index lifecycle management
+xpack.ilm.enabled: true
