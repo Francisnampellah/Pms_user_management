@@ -102,6 +102,9 @@ docker-compose logs -f api
 |---------|-------------|------|
 | `api` | PMS REST API | 3000 |
 | `postgres` | PostgreSQL Database | 5432 |
+| `elasticsearch` | Log storage and search | 9200 |
+| `logstash` | Log processing pipeline | 5000, 5044 |
+| `kibana` | Log visualization | 5601 |
 | `migrate` | Database migrations (runs once) | - |
 
 ### Docker Commands
@@ -161,6 +164,134 @@ Recommended production settings:
 - Increase `BCRYPT_ROUNDS=12` for better security
 - Configure proper `CORS_ORIGIN` for your domain
 - Use a reverse proxy (nginx, Traefik) with SSL
+
+## 📊 ELK Stack Integration (Elasticsearch, Logstash, Kibana)
+
+The PMS API includes full ELK stack integration for centralized logging and visualization.
+
+### Architecture
+
+```
+┌─────────────┐     ┌─────────────┐     ┌─────────────────┐     ┌─────────────┐
+│   PMS API   │────▶│  Logstash   │────▶│  Elasticsearch  │◀────│   Kibana    │
+│  (Node.js)  │     │  (TCP:5000) │     │   (Port 9200)   │     │ (Port 5601) │
+└─────────────┘     └─────────────┘     └─────────────────┘     └─────────────┘
+     │                    │                     │                      │
+     │   JSON logs        │   Parsed &          │   Indexed            │   Visualization
+     │   via TCP          │   enriched logs     │   logs               │   & dashboards
+     └────────────────────┴─────────────────────┴──────────────────────┘
+```
+
+### Quick Start
+
+```bash
+# Start all services including ELK
+docker-compose up -d
+
+# Run the ELK setup script (sets passwords, creates index templates)
+chmod +x elk/setup-elk.sh
+./elk/setup-elk.sh
+
+# View Logstash logs to verify connection
+docker-compose logs -f logstash
+```
+
+### Accessing Kibana
+
+1. Open http://localhost:5601 in your browser
+2. Login with:
+   - **Username:** `elastic`
+   - **Password:** `changeme` (or your `ELASTIC_PASSWORD`)
+3. Go to **Analytics → Discover**
+4. Select the `pms-logs-*` data view
+5. Make some API requests to see logs appear
+
+### Log Data Structure
+
+Each log entry contains:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `@timestamp` | date | Log timestamp |
+| `level` | keyword | Log level (info, warn, error) |
+| `service` | keyword | Service name (pms-api) |
+| `environment` | keyword | Environment (development/production) |
+| `request_method` | keyword | HTTP method (GET, POST, etc.) |
+| `request_url` | text | Full request URL |
+| `endpoint` | keyword | API endpoint path |
+| `response_status` | integer | HTTP status code |
+| `status_category` | keyword | success/client_error/server_error |
+| `responseTime` | integer | Response time in milliseconds |
+| `response_time_category` | keyword | fast/normal/slow/very_slow |
+| `userId` | integer | Authenticated user ID |
+| `error_message` | text | Error message (if applicable) |
+
+### Creating Dashboards
+
+#### Sample Visualizations
+
+1. **Request Count Over Time**
+   - Type: Area chart
+   - X-axis: `@timestamp` (date histogram)
+   - Y-axis: Count
+
+2. **Response Time Distribution**
+   - Type: Line chart
+   - X-axis: `@timestamp`
+   - Y-axis: Average of `responseTime`
+
+3. **Status Code Breakdown**
+   - Type: Pie chart
+   - Slice by: `status_category`
+
+4. **Top Endpoints**
+   - Type: Data table
+   - Columns: `endpoint`, Count, Avg `responseTime`
+
+5. **Error Log Table**
+   - Type: Data table
+   - Filter: `status_category: server_error OR client_error`
+   - Columns: `@timestamp`, `request_method`, `request_url`, `response_status`, `error_message`
+
+### ELK Commands
+
+```bash
+# Start only ELK services
+docker-compose up -d elasticsearch logstash kibana
+
+# Check Elasticsearch health
+curl -u elastic:changeme http://localhost:9200/_cluster/health?pretty
+
+# View Logstash pipeline stats
+curl http://localhost:9600/_node/stats/pipelines?pretty
+
+# View indices
+curl -u elastic:changeme http://localhost:9200/_cat/indices?v
+
+# Delete old logs (older than 7 days)
+curl -X DELETE -u elastic:changeme "http://localhost:9200/pms-logs-$(date -d '7 days ago' +%Y.%m.%d)"
+```
+
+### Environment Variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `ENABLE_ELK_LOGGING` | `true` | Enable/disable ELK logging |
+| `LOGSTASH_HOST` | `logstash` | Logstash hostname |
+| `LOGSTASH_PORT` | `5000` | Logstash TCP port |
+| `ELASTIC_PASSWORD` | `changeme` | Elasticsearch password |
+
+### Disabling ELK
+
+To run without ELK stack (e.g., for local development):
+
+```bash
+# Set environment variable
+ENABLE_ELK_LOGGING=false
+
+# Or start only core services
+docker-compose up -d postgres api
+```
 
 ## 📚 API Documentation
 

@@ -1,0 +1,41 @@
+{
+  "version": "8.11.0",
+  "objects": [
+    {
+      "id": "pms-logs-*",
+      "type": "index-pattern",
+      "attributes": {
+        "title": "pms-logs-*",
+        "timeFieldName": "@timestamp",
+        "fields": "[]"
+      },
+      "references": []
+    },
+    {
+      "id": "pms-api-dashboard",
+      "type": "dashboard",
+      "attributes": {
+        "title": "PMS API Dashboard",
+        "description": "Property Management System API monitoring dashboard",
+        "panelsJSON": "[{\"version\":\"8.11.0\",\"type\":\"lens\",\"gridData\":{\"x\":0,\"y\":0,\"w\":24,\"h\":8,\"i\":\"1\"},\"panelIndex\":\"1\",\"embeddableConfig\":{\"attributes\":{\"title\":\"Request Count Over Time\",\"visualizationType\":\"lnsXY\",\"state\":{\"datasourceStates\":{\"formBased\":{\"layers\":{\"layer1\":{\"columnOrder\":[\"date\",\"count\"],\"columns\":{\"date\":{\"dataType\":\"date\",\"isBucketed\":true,\"label\":\"@timestamp\",\"operationType\":\"date_histogram\",\"params\":{\"interval\":\"auto\"},\"sourceField\":\"@timestamp\"},\"count\":{\"dataType\":\"number\",\"isBucketed\":false,\"label\":\"Count\",\"operationType\":\"count\",\"sourceField\":\"___records___\"}}}}}},\"visualization\":{\"axisTitlesVisibilitySettings\":{\"x\":true,\"yLeft\":true,\"yRight\":true},\"layers\":[{\"accessors\":[\"count\"],\"layerId\":\"layer1\",\"layerType\":\"data\",\"seriesType\":\"area\",\"xAccessor\":\"date\"}]},\"query\":{\"language\":\"kuery\",\"query\":\"\"},\"filters\":[]},\"references\":[{\"id\":\"pms-logs-*\",\"name\":\"indexpattern-datasource-layer-layer1\",\"type\":\"index-pattern\"}]}}},{\"version\":\"8.11.0\",\"type\":\"lens\",\"gridData\":{\"x\":24,\"y\":0,\"w\":24,\"h\":8,\"i\":\"2\"},\"panelIndex\":\"2\",\"embeddableConfig\":{\"attributes\":{\"title\":\"Response Time Distribution\",\"visualizationType\":\"lnsXY\",\"state\":{\"datasourceStates\":{\"formBased\":{\"layers\":{\"layer1\":{\"columnOrder\":[\"date\",\"avg_response\"],\"columns\":{\"date\":{\"dataType\":\"date\",\"isBucketed\":true,\"label\":\"@timestamp\",\"operationType\":\"date_histogram\",\"params\":{\"interval\":\"auto\"},\"sourceField\":\"@timestamp\"},\"avg_response\":{\"dataType\":\"number\",\"isBucketed\":false,\"label\":\"Avg Response Time\",\"operationType\":\"average\",\"sourceField\":\"responseTime\"}}}}}},\"visualization\":{\"layers\":[{\"accessors\":[\"avg_response\"],\"layerId\":\"layer1\",\"layerType\":\"data\",\"seriesType\":\"line\",\"xAccessor\":\"date\"}]},\"query\":{\"language\":\"kuery\",\"query\":\"\"},\"filters\":[]},\"references\":[{\"id\":\"pms-logs-*\",\"name\":\"indexpattern-datasource-layer-layer1\",\"type\":\"index-pattern\"}]}}},{\"version\":\"8.11.0\",\"type\":\"lens\",\"gridData\":{\"x\":0,\"y\":8,\"w\":16,\"h\":8,\"i\":\"3\"},\"panelIndex\":\"3\",\"embeddableConfig\":{\"attributes\":{\"title\":\"Status Code Distribution\",\"visualizationType\":\"lnsPie\",\"state\":{\"datasourceStates\":{\"formBased\":{\"layers\":{\"layer1\":{\"columnOrder\":[\"status\",\"count\"],\"columns\":{\"status\":{\"dataType\":\"string\",\"isBucketed\":true,\"label\":\"Status Category\",\"operationType\":\"terms\",\"params\":{\"size\":10,\"orderBy\":{\"type\":\"column\",\"columnId\":\"count\"},\"orderDirection\":\"desc\"},\"sourceField\":\"status_category\"},\"count\":{\"dataType\":\"number\",\"isBucketed\":false,\"label\":\"Count\",\"operationType\":\"count\",\"sourceField\":\"___records___\"}}}}}},\"visualization\":{\"layers\":[{\"layerId\":\"layer1\",\"primaryGroups\":[\"status\"],\"metrics\":[\"count\"]}]},\"query\":{\"language\":\"kuery\",\"query\":\"\"},\"filters\":[]},\"references\":[{\"id\":\"pms-logs-*\",\"name\":\"indexpattern-datasource-layer-layer1\",\"type\":\"index-pattern\"}]}}},{\"version\":\"8.11.0\",\"type\":\"lens\",\"gridData\":{\"x\":16,\"y\":8,\"w\":16,\"h\":8,\"i\":\"4\"},\"panelIndex\":\"4\",\"embeddableConfig\":{\"attributes\":{\"title\":\"Top Endpoints\",\"visualizationType\":\"lnsDatatable\",\"state\":{\"datasourceStates\":{\"formBased\":{\"layers\":{\"layer1\":{\"columnOrder\":[\"endpoint\",\"count\",\"avg_time\"],\"columns\":{\"endpoint\":{\"dataType\":\"string\",\"isBucketed\":true,\"label\":\"Endpoint\",\"operationType\":\"terms\",\"params\":{\"size\":10,\"orderBy\":{\"type\":\"column\",\"columnId\":\"count\"},\"orderDirection\":\"desc\"},\"sourceField\":\"endpoint\"},\"count\":{\"dataType\":\"number\",\"isBucketed\":false,\"label\":\"Requests\",\"operationType\":\"count\",\"sourceField\":\"___records___\"},\"avg_time\":{\"dataType\":\"number\",\"isBucketed\":false,\"label\":\"Avg Time (ms)\",\"operationType\":\"average\",\"sourceField\":\"responseTime\"}}}}}},\"visualization\":{\"columns\":[{\"columnId\":\"endpoint\"},{\"columnId\":\"count\"},{\"columnId\":\"avg_time\"}]},\"query\":{\"language\":\"kuery\",\"query\":\"\"},\"filters\":[]},\"references\":[{\"id\":\"pms-logs-*\",\"name\":\"indexpattern-datasource-layer-layer1\",\"type\":\"index-pattern\"}]}}},{\"version\":\"8.11.0\",\"type\":\"lens\",\"gridData\":{\"x\":32,\"y\":8,\"w\":16,\"h\":8,\"i\":\"5\"},\"panelIndex\":\"5\",\"embeddableConfig\":{\"attributes\":{\"title\":\"HTTP Methods\",\"visualizationType\":\"lnsPie\",\"state\":{\"datasourceStates\":{\"formBased\":{\"layers\":{\"layer1\":{\"columnOrder\":[\"method\",\"count\"],\"columns\":{\"method\":{\"dataType\":\"string\",\"isBucketed\":true,\"label\":\"Method\",\"operationType\":\"terms\",\"params\":{\"size\":10,\"orderBy\":{\"type\":\"column\",\"columnId\":\"count\"},\"orderDirection\":\"desc\"},\"sourceField\":\"request_method\"},\"count\":{\"dataType\":\"number\",\"isBucketed\":false,\"label\":\"Count\",\"operationType\":\"count\",\"sourceField\":\"___records___\"}}}}}},\"visualization\":{\"layers\":[{\"layerId\":\"layer1\",\"primaryGroups\":[\"method\"],\"metrics\":[\"count\"]}]},\"query\":{\"language\":\"kuery\",\"query\":\"\"},\"filters\":[]},\"references\":[{\"id\":\"pms-logs-*\",\"name\":\"indexpattern-datasource-layer-layer1\",\"type\":\"index-pattern\"}]}}},{\"version\":\"8.11.0\",\"type\":\"lens\",\"gridData\":{\"x\":0,\"y\":16,\"w\":48,\"h\":10,\"i\":\"6\"},\"panelIndex\":\"6\",\"embeddableConfig\":{\"attributes\":{\"title\":\"Error Logs\",\"visualizationType\":\"lnsDatatable\",\"state\":{\"datasourceStates\":{\"formBased\":{\"layers\":{\"layer1\":{\"columnOrder\":[\"timestamp\",\"method\",\"url\",\"status\",\"message\"],\"columns\":{\"timestamp\":{\"dataType\":\"date\",\"isBucketed\":false,\"label\":\"Time\",\"operationType\":\"last_value\",\"sourceField\":\"@timestamp\"},\"method\":{\"dataType\":\"string\",\"isBucketed\":true,\"label\":\"Method\",\"operationType\":\"terms\",\"sourceField\":\"request_method\"},\"url\":{\"dataType\":\"string\",\"isBucketed\":true,\"label\":\"URL\",\"operationType\":\"terms\",\"sourceField\":\"request_url\"},\"status\":{\"dataType\":\"number\",\"isBucketed\":false,\"label\":\"Status\",\"operationType\":\"last_value\",\"sourceField\":\"response_status\"},\"message\":{\"dataType\":\"string\",\"isBucketed\":true,\"label\":\"Error\",\"operationType\":\"terms\",\"sourceField\":\"error_message\"}}}}}},\"visualization\":{\"columns\":[{\"columnId\":\"timestamp\"},{\"columnId\":\"method\"},{\"columnId\":\"url\"},{\"columnId\":\"status\"},{\"columnId\":\"message\"}]},\"query\":{\"language\":\"kuery\",\"query\":\"status_category: \\\"server_error\\\" OR status_category: \\\"client_error\\\"\"},\"filters\":[]},\"references\":[{\"id\":\"pms-logs-*\",\"name\":\"indexpattern-datasource-layer-layer1\",\"type\":\"index-pattern\"}]}}}]",
+        "timeRestore": true,
+        "timeTo": "now",
+        "timeFrom": "now-24h",
+        "refreshInterval": {
+          "pause": false,
+          "value": 30000
+        },
+        "kibanaSavedObjectMeta": {
+          "searchSourceJSON": "{\"query\":{\"language\":\"kuery\",\"query\":\"\"},\"filter\":[]}"
+        }
+      },
+      "references": [
+        {
+          "id": "pms-logs-*",
+          "name": "kibanaSavedObjectMeta.searchSourceJSON.index",
+          "type": "index-pattern"
+        }
+      ]
+    }
+  ]
+}

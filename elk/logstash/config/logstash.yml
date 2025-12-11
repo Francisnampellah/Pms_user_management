@@ -1,0 +1,13 @@
+# Logstash Configuration
+
+http.host: "0.0.0.0"
+xpack.monitoring.elasticsearch.hosts: ["http://elasticsearch:9200"]
+xpack.monitoring.elasticsearch.username: "${ELASTIC_USER:elastic}"
+xpack.monitoring.elasticsearch.password: "${ELASTIC_PASSWORD:changeme}"
+
+# Pipeline configuration
+path.config: /usr/share/logstash/pipeline
+
+# Logging
+log.level: info
+log.format: json

@@ -7,7 +7,8 @@ import dotenv from 'dotenv';
 
 import routes from './routes';
 import { errorHandler, notFoundHandler } from './middlewares/error.middleware';
-import logger from './config/logger';
+import { elkLoggingMiddleware, elkErrorLoggingMiddleware } from './middlewares/elk-logging.middleware';
+import logger, { closeLogger } from './config/logger';
 import prisma from './config/database';
 
 // Load environment variables
@@ -53,6 +54,9 @@ app.use(limiter);
 app.use('/api/v1/auth/login', authLimiter);
 app.use('/api/v1/auth/register', authLimiter);
 
+// ELK Logging Middleware (before other middleware to capture all requests)
+app.use(elkLoggingMiddleware);
+
 // Logging
 app.use(pinoHttp({ logger }));
 
@@ -94,6 +98,9 @@ app.get('/api', (_req, res) => {
 // API routes
 app.use('/api/v1', routes);
 
+// ELK Error logging (before error handler)
+app.use(elkErrorLoggingMiddleware);
+
 // Error handling
 app.use(notFoundHandler);
 app.use(errorHandler);
@@ -110,6 +117,7 @@ const startServer = async () => {
       logger.info(`Environment: ${process.env.NODE_ENV || 'development'}`);
       logger.info(`Health check: http://localhost:${PORT}/health`);
       logger.info(`API documentation: http://localhost:${PORT}/api`);
+      logger.info(`ELK Logging: ${process.env.ENABLE_ELK_LOGGING === 'true' ? 'enabled' : 'disabled'}`);
     });
   } catch (error) {
     logger.error('Failed to start server:', error);
@@ -120,12 +128,14 @@ const startServer = async () => {
 // Handle graceful shutdown
 process.on('SIGTERM', async () => {
   logger.info('SIGTERM signal received: closing HTTP server');
+  closeLogger();
   await prisma.$disconnect();
   process.exit(0);
 });
 
 process.on('SIGINT', async () => {
   logger.info('SIGINT signal received: closing HTTP server');
+  closeLogger();
   await prisma.$disconnect();
   process.exit(0);
 });
