@@ -850,6 +850,7 @@ npm run test:watch
 |----------|-----|
 | API Health | http://localhost:3000/health |
 | API Base | http://localhost:3000/api/v1 |
+| Prisma Studio | http://localhost:5555 |
 | Kibana | http://localhost:5601 |
 | Elasticsearch | http://localhost:9200 |
 
