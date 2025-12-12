@@ -122,6 +122,7 @@ docker compose logs -f api
 |---------|-----------|-------------|------|
 | `api` | pms-api | PMS REST API | 3000 |
 | `postgres` | pms-postgres | PostgreSQL 15 Database | 5432 |
+| `prisma-studio` | pms-prisma-studio | Database GUI (Prisma Studio) | 5555 |
 | `elasticsearch` | pms-elasticsearch | Log storage and search (v8.11) | 9200, 9300 |
 | `logstash` | pms-logstash | Log processing pipeline | 5001→5000, 5044, 9600 |
 | `kibana` | pms-kibana | Log visualization (v8.11) | 5601 |
