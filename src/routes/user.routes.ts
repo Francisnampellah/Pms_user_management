@@ -3,7 +3,7 @@ import { userController } from '../controllers/user.controller';
 import { validateRequest } from '../middlewares/validation.middleware';
 import { authenticate, requirePermission } from '../middlewares/auth.middleware';
 import { auditLog } from '../middlewares/audit.middleware';
-import { updateUserSchema } from '../utils/validators';
+import { updateUserSchema, createUserSchema } from '../utils/validators';
 import { Permission } from '../types';
 
 const router = Router();
@@ -15,6 +15,14 @@ router.get(
   '/',
   requirePermission(Permission.USER_READ, Permission.SYSTEM_ADMIN),
   userController.getAll.bind(userController)
+);
+
+router.post(
+  '/',
+  requirePermission(Permission.USER_CREATE, Permission.SYSTEM_ADMIN),
+  validateRequest(createUserSchema),
+  auditLog('CREATE', 'user'),
+  userController.create.bind(userController)
 );
 
 router.get(

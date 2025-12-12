@@ -170,6 +170,7 @@ export enum Permission {
   // Settings permissions
   SETTINGS_READ = 'settings:read',
   SETTINGS_UPDATE = 'settings:update',
+  USER_CREATE = "USER_CREATE",
 }
 
 // Role names

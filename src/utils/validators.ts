@@ -124,6 +124,21 @@ export const updateUserSchema = z.object({
   isActive: z.boolean().optional(),
 });
 
+// User create schema
+export const createUserSchema = z.object({
+  email: z.string().email('Invalid email format'),
+  password: z
+    .string()
+    .min(8, 'Password must be at least 8 characters')
+    .regex(
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
+      'Password must contain at least one uppercase letter, one lowercase letter, and one number'
+    ),
+  firstName: z.string().min(1, 'First name is required').max(100),
+  lastName: z.string().min(1, 'Last name is required').max(100),
+  phone: z.string().max(50).optional(),
+});
+
 // System setting schema
 export const updateSettingSchema = z.object({
   value: z.string().min(1, 'Value is required'),

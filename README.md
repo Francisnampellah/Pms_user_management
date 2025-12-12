@@ -630,6 +630,7 @@ GET /health
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | GET | `/users` | List all users |
+| POST | `/users` | Create new user |
 | GET | `/users/:id` | Get user details |
 | PUT | `/users/:id` | Update user |
 

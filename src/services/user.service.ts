@@ -1,7 +1,50 @@
 import prisma from '../config/database';
 import { AppError } from '../types';
+import bcrypt from 'bcrypt';
 
 class UserService {
+  async create(data: {
+    email: string;
+    password: string;
+    firstName: string;
+    lastName: string;
+    phone?: string;
+  }) {
+    const existingUser = await prisma.user.findUnique({
+      where: { email: data.email },
+    });
+
+    if (existingUser) {
+      throw new AppError('Email already exists', 409, 'CONFLICT');
+    }
+
+    const bcryptRounds = parseInt(process.env.BCRYPT_ROUNDS || '10', 10);
+    const hashedPassword = await bcrypt.hash(data.password, bcryptRounds);
+
+    const user = await prisma.user.create({
+      data: {
+        email: data.email,
+        password: hashedPassword,
+        firstName: data.firstName,
+        lastName: data.lastName,
+        phone: data.phone,
+      },
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        phone: true,
+        isActive: true,
+        isEmailVerified: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+
+    return user;
+  }
+
   async getAll(filter: {
     search?: string;
     isActive?: boolean;

@@ -4,6 +4,22 @@ import { userService } from '../services/user.service';
 import { getPaginationParams, getPaginationMeta } from '../utils/pagination';
 
 export class UserController {
+  async create(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const result = await userService.create(req.body);
+      
+      const response: ApiResponse = {
+        success: true,
+        message: 'User created successfully',
+        data: result,
+      };
+
+      res.status(201).json(response);
+    } catch (error) {
+      next(error);
+    }
+  }
+
   async getAll(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const { page, limit } = req.query as any;
