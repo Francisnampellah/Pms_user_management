@@ -17,6 +17,12 @@ router.get(
   propertyController.getAll.bind(propertyController)
 );
 
+router.get(
+  '/organization/:organizationId',
+  requirePermission(Permission.PROPERTY_READ, Permission.SYSTEM_ADMIN),
+  propertyController.getByOrganizationId.bind(propertyController)
+);
+
 router.post(
   '/',
   requirePermission(Permission.PROPERTY_CREATE, Permission.SYSTEM_ADMIN),

@@ -62,6 +62,33 @@ export class PropertyController {
     }
   }
 
+  async getByOrganizationId(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const organizationId = parseInt(req.params.organizationId, 10);
+      const { page, limit } = req.query as any;
+      const pagination = getPaginationParams(Number(page), Number(limit));
+      
+      const { properties, total } = await propertyService.getAll({
+        organizationId,
+        search: req.query.search as string,
+        isActive: req.query.isActive === 'true' ? true : req.query.isActive === 'false' ? false : undefined,
+        city: req.query.city as string,
+        country: req.query.country as string,
+        ...pagination,
+      });
+      
+      const response: ApiResponse = {
+        success: true,
+        data: properties,
+        ...{ pagination: getPaginationMeta(pagination.page, pagination.limit, total) },
+      };
+
+      res.status(200).json(response);
+    } catch (error) {
+      next(error);
+    }
+  }
+
   async update(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const id = parseInt(req.params.id, 10);

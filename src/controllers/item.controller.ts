@@ -64,6 +64,35 @@ export class ItemController {
     }
   }
 
+  async getByPropertyId(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const propertyId = parseInt(req.params.propertyId, 10);
+      const { page, limit } = req.query as any;
+      const pagination = getPaginationParams(Number(page), Number(limit));
+      
+      const { items, total } = await itemService.getAll({
+        propertyId,
+        search: req.query.search as string,
+        isActive: req.query.isActive === 'true' ? true : req.query.isActive === 'false' ? false : undefined,
+        status: req.query.status as string,
+        itemType: req.query.itemType as string,
+        minPrice: req.query.minPrice ? Number(req.query.minPrice) : undefined,
+        maxPrice: req.query.maxPrice ? Number(req.query.maxPrice) : undefined,
+        ...pagination,
+      });
+      
+      const response: ApiResponse = {
+        success: true,
+        data: items,
+        ...{ pagination: getPaginationMeta(pagination.page, pagination.limit, total) },
+      };
+
+      res.status(200).json(response);
+    } catch (error) {
+      next(error);
+    }
+  }
+
   async update(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const id = parseInt(req.params.id, 10);
