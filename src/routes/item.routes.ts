@@ -17,6 +17,12 @@ router.get(
   itemController.getAll.bind(itemController)
 );
 
+router.get(
+  '/property/:propertyId',
+  requirePermission(Permission.ITEM_READ, Permission.SYSTEM_ADMIN),
+  itemController.getByPropertyId.bind(itemController)
+);
+
 router.post(
   '/',
   requirePermission(Permission.ITEM_CREATE, Permission.SYSTEM_ADMIN),

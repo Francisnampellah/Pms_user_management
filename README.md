@@ -596,6 +596,7 @@ GET /health
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | GET | `/properties` | List all properties |
+| GET | `/properties/organization/:organizationId` | Get properties by organization |
 | POST | `/properties` | Create new property |
 | GET | `/properties/:id` | Get property details |
 | PUT | `/properties/:id` | Update property |
@@ -606,6 +607,7 @@ GET /health
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | GET | `/items` | List all items |
+| GET | `/items/property/:propertyId` | Get items by property |
 | POST | `/items` | Create new item |
 | GET | `/items/:id` | Get item details |
 | PUT | `/items/:id` | Update item |
